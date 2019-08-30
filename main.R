@@ -30,7 +30,7 @@ summary(fullmodel)
 updatedmodel <- update(fullmodel, .~.-newspaper)
 summary(updatedmodel)
 
-# All explanatory variables have p-value > alpha, so we stop backward elimination here
+# All explanatory variables have p-value < alpha, so we stop backward elimination here
 
 # Choose a linear model using all subsets regression
 library(leaps)
