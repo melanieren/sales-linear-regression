@@ -15,14 +15,16 @@ train <- df[train_index, ]
 test <- df[-train_index, ]
 
 # Exploratory plots
-pairs(~.,data=train, main="Scatterplot Matrix")
-# plots of tv/radio/newspaper show random scatter -> no correlation
-# sales vs TV/radio/newspaper shows linear relationship -> let's try using a linear model
-# sales vs newspaper and sales vs TV show fan-shape -> indicates heteroskedasticity 
+library(GGally)
+ggpairs(train, title="Scatterplot Matrix")
+# TV vs radio, TV vs newspaper, and radio vs newspaper show a random scatter -> no correlation
+# sales vs TV, sales vs radio, and sales vs. newspaper all show a linear relationship -> let's try 
+#    using a linear model
+# sales vs newspaper and sales vs TV show fan-shape -> indicates heteroskedasticity
 
 # Selecting a linear model
 # Choose a linear model using backward elimination
-# Fit model with all explanatory variables                      
+# Fit model with all explanatory variables
 fullmodel <- lm(sales~.,data=df)
 summary(fullmodel)
 
@@ -46,12 +48,14 @@ summary(best.subset)$adjr2
 which.max(summary(best.subset)$adjr2)
 
 # Plot C_p and adjusted R^2 values
+library(ggplot2)
+library(gridExtra)
 par(mfrow=c(1,2))
-plot(2:4, summary(best.subset)$cp, xlab="No. of Parameters",
-     ylab="Cp statistic", col="blue")
-abline(0,1)
-plot(2:4, summary(best.subset)$adjr2, xlab="No. of Parameters",
-     ylab="Adjusted R-squared", col="blue")
+Cp_plot <- qplot(seq_along(summary(best.subset)$cp), summary(best.subset)$cp, xlab="No. of Parameters",
+      ylab="Cp statistic") + geom_abline()
+R2_plot <- qplot(seq_along(summary(best.subset)$adjr2), summary(best.subset)$adjr2, xlab="No. of Parameters",
+      ylab="Adjusted R-squared") 
+grid.arrange(Cp_plot, R2_plot, ncol=2)
 
 # From Cp values and adjusted R2 values, the 2 explanatory variable model looks best (TV and radio)
 # This matches the linear model chosen using backwards elimination
@@ -60,14 +64,14 @@ plot(2:4, summary(best.subset)$adjr2, xlab="No. of Parameters",
 plot(updatedmodel)
 # Residuals vs fitted plots shows quadratic relationship -> indicates non-linearity (need higher order polynomial terms)
 #   or other explanatory variables are not captured in the model
-# QQ-plot is S-shaped -> indicates residuals are not normally distributed 
+# QQ-plot is S-shaped -> indicates residuals are not normally distributed
 
 # Make predictions for test data
 predicted <- predict(updatedmodel, test)
-prediction_results <- data.frame(cbind(actual=test$sales, predicted=predicted))  
+prediction_results <- data.frame(cbind(actual=test$sales, predicted=predicted))
 correlation_accuracy <- cor(prediction_results) # 93.5%
 
-# Adding interaction 
+# Adding interaction
 # The Residuals vs fitted plot had a quadratic relationship -> could be result of explanatory variables
 #   not captured in the model
 # Try adding interaction between the two explanatory variables and see if it is significant
@@ -83,9 +87,5 @@ plot(model_with_interaction)
 
 # Make new predictions
 predicted2 <- predict(model_with_interaction, test)
-prediction_results2 <- data.frame(cbind(actual=test$sales, predicted=predicted2))  
+prediction_results2 <- data.frame(cbind(actual=test$sales, predicted=predicted2))
 correlation_accuracy2 <- cor(prediction_results2) # 97.8%
-
-
-
-
